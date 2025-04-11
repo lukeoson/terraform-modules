@@ -1,3 +1,10 @@
+locals {
+  http_port    = 80
+  any_port     = 0
+  any_protocol = "-1"
+  tcp_protocol = "tcp"
+  all_ips      = ["0.0.0.0/0"]
+}
 terraform {
   required_version = ">= 1.0.0, < 2.0.0"
   required_providers {
@@ -8,11 +15,7 @@ terraform {
   }
 }
 
-#terraform {
-#  backend "s3" {
-#    key            = "stage/services/webserver-cluster/terraform.tfstate"
-#  }
-#}
+
 
 #remote state
 data "terraform_remote_state" "db" {
@@ -60,6 +63,15 @@ resource "aws_autoscaling_group" "example" {
     key = "Name"
     value = var.cluster_name
     propagate_at_launch = true
+  }
+  dynamic "tag" {
+    for_each = var.custom_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
   }
 }
 
@@ -162,10 +174,3 @@ resource "aws_lb_listener_rule" "asg" {
   }
 }
 
-locals {
-  http_port    = 80
-  any_port     = 0
-  any_protocol = "-1"
-  tcp_protocol = "tcp"
-  all_ips      = ["0.0.0.0/0"]
-}
